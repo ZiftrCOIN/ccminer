@@ -70,6 +70,9 @@
     <Filter Include="Source Files\CUDA\pluck">
       <UniqueIdentifier>{59eb6b57-944a-425e-920a-bb168e950c45}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\CUDA\ziftr5">
+      <UniqueIdentifier>{9ae0d14f-19d4-479c-95ad-f69886a9f546}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compat\jansson\dump.c">
@@ -517,6 +520,9 @@
     </CudaCompile>
     <CudaCompile Include="pluck\pluck.cu">
       <Filter>Source Files\CUDA\pluck</Filter>
+    </CudaCompile>
+    <CudaCompile Include="ziftr\cuda_ziftr.cu">
+      <Filter>Source Files\CUDA\ziftr5</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

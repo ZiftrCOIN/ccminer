@@ -144,7 +144,7 @@ typedef enum {
 	ALGO_KECCAK,
 	ALGO_M7,
 	ALGO_LYRA,
-    ALGO_NEOSCRYPT,
+    ALGO_ZR5,
 	ALGO_PLUCK,
 	ALGO_DEEP,
 	ALGO_DOOM,
@@ -173,7 +173,7 @@ static const char *algo_names[] = {
 	"keccak",
 	"m7",
 	"lyra2",
-	"neoscrypt",
+	"zr5",
 	"pluck",
 	"deep",
 	"doom",
@@ -276,7 +276,7 @@ Options:\n\
 			keccak     keccak256 (maxcoin) hash\n\
 			m7         m7  (crytonite) hash\n\
 			lyra2      lyra2RE  (VertCoin) hash\n\
-            neoscrypt  neoscrypt (FeatherCoin) hash\n\
+            zr5        zr5 (Ziftrcoin) hash\n\
             pluck      pluck (SupCoin) hash\n\
 			deep       deep  (deepcoin) hash\n\
 			doom       doomcoin  hash\n\
@@ -462,7 +462,7 @@ static bool work_decode(const json_t *val, struct work *work)
 	
  
 	} else {
-	if (unlikely(!jobj_binary(val, "data", work->data, (opt_algo==ALGO_NEOSCRYPT)?84:sizeof(work->data)))) {
+	if (unlikely(!jobj_binary(val, "data", work->data, (opt_algo==ALGO_ZR5)?80:sizeof(work->data)))) {
 		applog(LOG_ERR, "JSON inval data fucked up");
 		goto err_out;
 	}
@@ -475,7 +475,7 @@ static bool work_decode(const json_t *val, struct work *work)
 			work->maxvote = 1024;
 		}
 	} else work->maxvote = 0;
-int data_size = (opt_algo == ALGO_NEOSCRYPT) ? 21 : ARRAY_SIZE(work->data);
+int data_size = (opt_algo == ALGO_ZR5) ? 20 : ARRAY_SIZE(work->data);
 	for (i = 0; i < data_size; i++)
 		work->data[i] = le32dec(work->data + i);
 	for (i = 0; i < ARRAY_SIZE(work->target); i++)
@@ -965,11 +965,11 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 		/* build hex string */
 		if (opt_algo != ALGO_M7) {
 		if (opt_algo != ALGO_HEAVY && opt_algo != ALGO_MJOLLNIR && opt_algo) {
-			int data_size = (opt_algo == ALGO_NEOSCRYPT) ? 80 : sizeof(work->data);			
+			int data_size = (opt_algo == ALGO_ZR5) ? 80 : sizeof(work->data);			
 			for (i = 0; i < (data_size >>2); i++)
 				le32enc(work->data + i, work->data[i]);
 			}
-		int data_size = (opt_algo == ALGO_NEOSCRYPT) ? 80 : sizeof(work->data);
+		int data_size = (opt_algo == ALGO_ZR5) ? 80 : sizeof(work->data);
 		str = bin2hex((unsigned char *)work->data,data_size);
 			if (unlikely(!str)) {
 				applog(LOG_ERR, "submit_upstream_work OOM");
@@ -1623,6 +1623,10 @@ static void *miner_thread(void *userdata)
 			rc = scanhash_x17(thr_id, work.data, work.target,
 			                      max_nonce, &hashes_done);
 			break;
+		case ALGO_ZR5:
+			rc = scanhash_zr5(thr_id, work.data, work.target,
+				max_nonce, &hashes_done);
+			break;
         case ALGO_M7:
 
 			rc = scanhash_m7(thr_id,work.data, work.target,max_nonce, &hashes_done);
@@ -1687,8 +1691,23 @@ static void *miner_thread(void *userdata)
 
 		/* if nonce found, submit work */
 		if (rc && !opt_benchmark && !submit_work(mythr, &work))
-			break;
-	}
+	    break;
+	
+//// eliminate the duplicate
+		if (rc == 1 && opt_algo == ALGO_NIST5) {
+			if (unlikely(!get_work(mythr, &g_work))) {
+				pthread_mutex_lock(&stats_lock);
+				applog(LOG_ERR, "work retrieval failed, exiting "
+					"mining thread %d", mythr->id);
+				pthread_mutex_unlock(&g_work_lock);
+				goto out;
+			}
+
+			g_work_time = have_stratum ? 0 : time(NULL);
+		}
+
+
+       }
 
 out:
 	tq_freeze(mythr->q);

@@ -1,30 +1,11 @@
 
-ccMiner release 1.2 (June 15th 2014) - "Killer Groestl + X13"
+ccMiner djm edition: release 5/03/2015 : ZR5 algorithm
 -------------------------------------------------------------
-
-***************************************************************
-If you find this tool useful and like to support its continued 
-          development, then consider a donation.
-
-   LTC donation address: LKS1WDKGED647msBQfLBHV3Ls8sveGncnm
-   BTC donation address: 16hJF5mceSojnTD3ZTUDqdRhDyPJzoRakM
-   YAC donation address: Y87sptDEcpLkLeAuex6qZioDbvy1qXZEj4
-   VTC donation address: VrjeFzMgvteCGarLw85KivBzmsiH9fqp4a
-   MAX donation address: mHrhQP9EFArechWxTFJ97s9D3jvcCvEEnt
-  DOGE donation address: DT9ghsGmez6ojVdEZgvaZbT2Z3TruXG6yP
-   HVC donation address: HNN3PyyTMkDo4RkEjkWSGMwqia1yD8mwJN
-   GRS donation address: FmJKJAhvyHWPeEVeLQHefr2naqgWc9ABTM
-   MYR donation address: MNHM7Q7HVfGpKDJgVJrY8ofwvmeugNewyf
-   JPC donation address: JYFBypVDkk583yKWY4M46TG5vXG8hfgD2U
-   SFR donation address: SR4b87aEnPfTs77bo9NnnaV21fiF6jQpAp
-   MNC donation address: MShgNUSYwybEbXLvJUtdNg1a7rUeiNgooK
-   BTQ donation address: 13GFwLiZL2DaA9XeE733PNrQX5QYLFsonS
-***************************************************************
 
 >>> Introduction <<<
 
 This is a CUDA accelerated mining application for use with
-
+ziftrcoin
 HeavyCoin & MjollnirCoin
 FugueCoin
 GroestlCoin & Myriad-Groestl
@@ -60,6 +41,7 @@ its command line interface and options.
                           anime       use to mine Animecoin
                           nist5       use to mine TalkCoin
                           x11         use to mine DarkCoin
+                          zr5         use to mine Ziftrcoin
 
   -d, --devices         gives a comma separated list of CUDA device IDs
                         to operate on. Device IDs start counting from 0!
@@ -203,16 +185,11 @@ features.
 
 Notable contributors to this application are:
 
-Christian Buchner, Christian H. (Germany): CUDA implementation 
+djm34
 
-and also many thanks to anyone else who contributed to the original
-cpuminer application (Jeff Garzik, pooler), it's original HVC-fork
-and the HVC-fork available at hvc.1gh.com
+based on initial project by Christian Buchner, Christian H. (Germany): CUDA implementation 
+
+and also many thanks to anyone else who contributed to the original cpuminer application (Jeff Garzik, pooler), it's original HVC-fork and the HVC-fork available at hvc.1gh.com
 
 Source code is included to satisfy GNU GPL V3 requirements.
 
-
-With kind regards,
-
-   Christian Buchner ( Christian.Buchner@gmail.com )
-   Christian H. ( Chris84 )
