@@ -1340,7 +1340,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		free(xnonce2str);
 	} 
 	
-	if (opt_algo == ALGO_JACKPOT || opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_PLUCK)
+	if (opt_algo == ALGO_JACKPOT ||  opt_algo == ALGO_PLUCK)
 		diff_to_target(work->target, sctx->job.diff / (65536.0 * opt_difficulty));
 	else if (opt_algo == ALGO_FUGUE256 || opt_algo == ALGO_GROESTL || opt_algo == ALGO_DMD_GR || opt_algo == ALGO_FRESH)
 		diff_to_target(work->target, sctx->job.diff / (256.0 * opt_difficulty));
@@ -1512,13 +1512,15 @@ static void *miner_thread(void *userdata)
 			case ALGO_JACKPOT:
 				max64 = 0x1fffLL;
 				break;
-            case ALGO_NEOSCRYPT:
             case ALGO_PLUCK:
 				max64 = 0xfffLL;
 				break;
 			case ALGO_M7:
 				max64 = 0x3ffffLL;
 				break;
+             case ALGO_ZR5:
+                max64 = 0x200000;
+                break;
 			default: 
 				max64 = 0xfffffLL;
 				break;
@@ -1694,7 +1696,7 @@ static void *miner_thread(void *userdata)
 	    break;
 	
 //// eliminate the duplicate
-		if (rc == 1 && opt_algo == ALGO_NIST5) {
+		if (rc == 1 && opt_algo == ALGO_ZR5) {
 			if (unlikely(!get_work(mythr, &g_work))) {
 				pthread_mutex_lock(&stats_lock);
 				applog(LOG_ERR, "work retrieval failed, exiting "
@@ -2380,6 +2382,8 @@ int main(int argc, char *argv[])
 	if (!opt_n_threads)
 		opt_n_threads = num_processors;
 
+	if (opt_algo==ALGO_ZR5) have_gbt=false;
+
 #ifdef HAVE_SYSLOG_H
 	if (use_syslog)
 		openlog("cpuminer", LOG_PID, LOG_USER);
@@ -2410,7 +2414,7 @@ int main(int argc, char *argv[])
 		applog(LOG_ERR, "workio thread create failed");
 		return 1;
 	}
-
+    
 	if (want_longpoll && !have_stratum) {
 		/* init longpoll thread info */
 		longpoll_thr_id = opt_n_threads + 1;

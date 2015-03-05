@@ -231,9 +231,9 @@ extern "C" int scanhash_zr5(int thr_id, uint32_t *pdata,
 			uint32_t hash1[16];
 			endiandata[0] = pdata[0] & (~0xFFFF0000);
 			endiandata[19] = foundNonce;
-			nist5hash(hash1, endiandata);
+			zr5hash(hash1, endiandata);
 			endiandata[0] = endiandata[0] | (0xFFFF0000 & (hash1[0] & 0xFFFF0000));
-			nist5hash(hash1, endiandata);
+			zr5hash(hash1, endiandata);
 			
 			if (fulltest(hash1, ptarget)) {
 				pdata[19] = foundNonce;
