@@ -1,6 +1,7 @@
 #include <stdint.h>
-
+#include <stdio.h>
 // aus heavy.cu
+
 extern cudaError_t MyStreamSynchronize(cudaStream_t stream, int situation, int thr_id);
 
 typedef struct {
@@ -323,6 +324,24 @@ __global__ void quark_jh512_gpu_hash_64(int threads, uint32_t startNounce, uint6
     }
 }
 
+__global__ void ziftr_jh512_gpu_hash_64(int threads, uint32_t startNounce, uint64_t *g_hash, uint8_t *d_test,uint32_t table)
+{
+	int thread = (blockDim.x * blockIdx.x + threadIdx.x);
+	if (thread < threads)
+	{
+		uint32_t nounce = startNounce + thread;
+
+
+		if ((d_test + 4 * thread)[table & (~0xFFFF0000)] == ((table & (~0x0000FFFF)) >> 16)) {
+
+		int hashPosition = nounce - startNounce;
+		uint32_t *Hash = (uint32_t*)&g_hash[8 * hashPosition];
+
+		JHHash(Hash, Hash);
+		
+}
+}
+}
 
 // Setup-Funktionen
 __host__ void quark_jh512_cpu_init(int thr_id, int threads)
@@ -352,5 +371,20 @@ __host__ void quark_jh512_cpu_hash_64(int thr_id, int threads, uint32_t startNou
 
     quark_jh512_gpu_hash_64<<<grid, block, shared_size>>>(threads, startNounce, (uint64_t*)d_hash, d_nonceVector);
     MyStreamSynchronize(NULL, order, thr_id);
+}
+
+__host__ void ziftr_jh512_cpu_hash_64(int thr_id, int threads, uint32_t startNounce, uint32_t *d_hash,uint32_t* test,uint32_t table, int order)
+{
+	const int threadsperblock = 256;
+
+	// berechne wie viele Thread Blocks wir brauchen
+	dim3 grid((threads + threadsperblock - 1) / threadsperblock);
+	dim3 block(threadsperblock);
+
+	// Größe des dynamischen Shared Memory Bereichs
+	size_t shared_size = 0;
+
+	ziftr_jh512_gpu_hash_64 << <grid, block, shared_size >> >(threads, startNounce, (uint64_t*)d_hash, (uint8_t*)test,table);
+	MyStreamSynchronize(NULL, order, thr_id);
 }
 

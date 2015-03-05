@@ -31,33 +31,9 @@ __global__ void quark_check_gpu_hash_64(int threads, uint32_t startNounce, uint3
 		uint32_t *inpHash = &g_hash[16 * hashPosition];
 
 		uint32_t hash[8];
-#pragma unroll 8
-		for (int i=0; i < 8; i++)
-			hash[i] = inpHash[i];
-
-		// kopiere Ergebnis
-		int i, position = -1;
-		bool rc = true;
-
-#pragma unroll 8
-		for (i = 7; i >= 0; i--) {
-			if (hash[i] > pTarget[i]) {
-				if(position < i) {
-					position = i;
-					rc = false;
-				}
-	 		}
-	 		if (hash[i] < pTarget[i]) {
-				if(position < i) {
-					position = i;
-					rc = true;
-				}
-	 		}
-		}
-
-		if(rc == true)
-			if(resNounce[0] > nounce)
-				resNounce[0] = nounce;
+		
+		if (inpHash[7] <= pTarget[7])   {
+				resNounce[0] = startNounce+thread;}
 	}
 }
 
