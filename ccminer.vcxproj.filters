@@ -524,5 +524,8 @@
     <CudaCompile Include="ziftr\cuda_ziftr.cu">
       <Filter>Source Files\CUDA\ziftr5</Filter>
     </CudaCompile>
+    <CudaCompile Include="quark\cuda_quark_groestl512_sm20.cu">
+      <Filter>Source Files\CUDA\quark</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

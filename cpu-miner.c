@@ -1639,7 +1639,7 @@ static void *miner_thread(void *userdata)
 			break;
 
 		case ALGO_PLUCK:
-			rc = scanhash_pluck(thr_id, work.data, work.target, max_nonce, &hashes_done);
+//			rc = scanhash_pluck(thr_id, work.data, work.target, max_nonce, &hashes_done);
 			break;
 
 

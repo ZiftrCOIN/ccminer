@@ -23,8 +23,9 @@ extern void quark_blake512_cpu_setBlock_80(void *pdata);
 
 extern void ziftr_blake512_cpu_hash_64(int thr_id, int threads, uint32_t startNounce, uint32_t *d_outputHash, uint32_t *d_test, uint32_t table, int order);
 extern void quark_groestl512_cpu_init(int thr_id, int threads);
+extern void quark_groestl512_sm20_init(int thr_id, uint32_t threads);
 extern void ziftr_groestl512_cpu_hash_64(int thr_id, int threads, uint32_t startNounce, uint32_t *d_hash, uint32_t *d_test, uint32_t table, int order);
-
+extern void ziftr_groestl512_sm20_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash, uint32_t *d_test, uint32_t table, int order);
 extern void quark_jh512_cpu_init(int thr_id, int threads);
 extern void ziftr_jh512_cpu_hash_64(int thr_id, int threads, uint32_t startNounce, uint32_t *d_hash, uint32_t *d_test, uint32_t table, int order);
 
@@ -129,6 +130,7 @@ inline void zr5hash(void *state, const void *input)
 
 
 extern bool opt_benchmark;
+extern int compute_version[8];
 
 extern "C" int scanhash_zr5(int thr_id, uint32_t *pdata,
    const  uint32_t *ptarget, uint32_t max_nonce,
@@ -154,7 +156,11 @@ extern "C" int scanhash_zr5(int thr_id, uint32_t *pdata,
 		cudaMalloc(&d_test[thr_id],      sizeof(uint32_t) * throughput);
 
 		quark_blake512_cpu_init(thr_id, throughput);
+		if (compute_version[thr_id]>30)
 		quark_groestl512_cpu_init(thr_id, throughput);
+        else
+		quark_groestl512_sm20_init(thr_id,throughput);
+
 		quark_jh512_cpu_init(thr_id, throughput);
 		m7_keccak512_cpu_init(thr_id, throughput);
 		quark_skein512_cpu_init(thr_id, throughput);
@@ -178,22 +184,38 @@ extern "C" int scanhash_zr5(int thr_id, uint32_t *pdata,
 		ziftr_keccak512_cpu_hash_80(thr_id, throughput, pdata[19],d_hash[thr_id],d_test[thr_id], order++);
 
 		ziftr_blake512_cpu_hash_64(thr_id, throughput, pdata[19],    d_hash[thr_id], d_test[thr_id], 0x00040000, order++); //0
+		if (compute_version[thr_id]>30)
 		ziftr_groestl512_cpu_hash_64(thr_id, throughput, pdata[19],  d_hash[thr_id], d_test[thr_id], 0x00010000, order++); //1
+		else
+		ziftr_groestl512_sm20_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00010000, order++); //1
+
 		ziftr_jh512_cpu_hash_64(thr_id, throughput, pdata[19],       d_hash[thr_id], d_test[thr_id], 0x00020000, order++);  //2
 		ziftr_skein512_cpu_hash_64(thr_id, throughput, pdata[19],    d_hash[thr_id], d_test[thr_id], 0x00030000, order++);  //3
 
 		ziftr_blake512_cpu_hash_64(thr_id, throughput, pdata[19],    d_hash[thr_id], d_test[thr_id], 0x00040001, order++); //0
+		if (compute_version[thr_id]>30)
 		ziftr_groestl512_cpu_hash_64(thr_id, throughput, pdata[19],  d_hash[thr_id], d_test[thr_id], 0x00010001, order++); //1
+		else
+		ziftr_groestl512_sm20_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00010001, order++); //1
+
 		ziftr_jh512_cpu_hash_64(thr_id, throughput, pdata[19],       d_hash[thr_id], d_test[thr_id], 0x00020001, order++);  //2
 		ziftr_skein512_cpu_hash_64(thr_id, throughput, pdata[19],    d_hash[thr_id], d_test[thr_id], 0x00030001, order++);  //3
 
 		ziftr_blake512_cpu_hash_64(thr_id, throughput, pdata[19],    d_hash[thr_id], d_test[thr_id], 0x00040002, order++); //0
+		if (compute_version[thr_id]>30)
 		ziftr_groestl512_cpu_hash_64(thr_id, throughput, pdata[19],  d_hash[thr_id], d_test[thr_id], 0x00010002, order++); //1
+		else
+		ziftr_groestl512_sm20_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00010002, order++); //1
+
 		ziftr_jh512_cpu_hash_64(thr_id, throughput, pdata[19],       d_hash[thr_id], d_test[thr_id], 0x00020002, order++);  //2
 		ziftr_skein512_cpu_hash_64(thr_id, throughput, pdata[19],    d_hash[thr_id], d_test[thr_id], 0x00030002, order++);  //3
 
 		ziftr_blake512_cpu_hash_64(thr_id, throughput, pdata[19],    d_hash[thr_id], d_test[thr_id], 0x00040003, order++); //0
+		if (compute_version[thr_id]>30)
 		ziftr_groestl512_cpu_hash_64(thr_id, throughput, pdata[19],  d_hash[thr_id], d_test[thr_id], 0x00010003, order++); //1
+		else
+		ziftr_groestl512_sm20_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00010003, order++); //1
+
 		ziftr_jh512_cpu_hash_64(thr_id, throughput, pdata[19],       d_hash[thr_id], d_test[thr_id], 0x00020003, order++);  //2
 		ziftr_skein512_cpu_hash_64(thr_id, throughput, pdata[19],    d_hash[thr_id], d_test[thr_id], 0x00030003, order++);  //3
 
@@ -202,22 +224,38 @@ extern "C" int scanhash_zr5(int thr_id, uint32_t *pdata,
 		ziftr_keccak512_cpu_hash_80_round2(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], order++);
 
 		ziftr_blake512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00040000, order++); //0
+		if (compute_version[thr_id]>30)
 		ziftr_groestl512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00010000, order++); //1
+		else
+		ziftr_groestl512_sm20_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00010000, order++); //1
+
 		ziftr_jh512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00020000, order++);  //2
 		ziftr_skein512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00030000, order++);  //3
 
 		ziftr_blake512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00040001, order++); //0
+		if (compute_version[thr_id]>30)
 		ziftr_groestl512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00010001, order++); //1
+		else
+		ziftr_groestl512_sm20_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00010001, order++); //1
+
 		ziftr_jh512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00020001, order++);  //2
 		ziftr_skein512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00030001, order++);  //3
 
 		ziftr_blake512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00040002, order++); //0
+		if (compute_version[thr_id]>30)
 		ziftr_groestl512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00010002, order++); //1
+		else
+		ziftr_groestl512_sm20_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00010002, order++); //1
+
 		ziftr_jh512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00020002, order++);  //2
 		ziftr_skein512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00030002, order++);  //3
 
 		ziftr_blake512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00040003, order++); //0
+		if (compute_version[thr_id]>30)
 		ziftr_groestl512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00010003, order++); //1
+        else 
+		ziftr_groestl512_sm20_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00010003, order++); //1
+
 		ziftr_jh512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00020003, order++);  //2
 		ziftr_skein512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], d_test[thr_id], 0x00030003, order++);  //3
 

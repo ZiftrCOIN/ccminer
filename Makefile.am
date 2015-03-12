@@ -33,6 +33,7 @@ ccminer_SOURCES		= elist.h miner.h compat.h \
 			  JHA/jackpotcoin.cu JHA/cuda_jha_keccak512.cu \
 			  JHA/cuda_jha_compactionTest.cu quark/cuda_quark_checkhash.cu \
 			  quark/cuda_jh512.cu quark/cuda_quark_blake512.cu quark/cuda_quark_groestl512.cu quark/cuda_skein512.cu \
+			  quark/cuda_quark_groestl512_sm20.cu \
 			  quark/cuda_bmw512.cu quark/cuda_quark_keccak512.cu quark/quarkcoin.cu quark/animecoin.cu \
 			  quark/cuda_quark_compactionTest.cu \
 			  cuda_nist5.cu \
@@ -47,7 +48,6 @@ ccminer_SOURCES		= elist.h miner.h compat.h \
 			  Algo256/cuda_keccak256.cu Algo256/keccak256.cu Algo256/cuda_blake256.cu  \
 			  Algo256/cuda_groestl256.cu Algo256/cuda_skein256.cu \
 			  lyra2/cuda_lyra2.cu lyra2/lyra2RE.cu \
-			  pluck/cuda_pluck.cu pluck/pluck.cu \
 			  x11/x11.cu x11/cuda_x11_luffa512.cu x11/cuda_x11_cubehash512.cu \
 			  x11/cuda_x11_shavite512.cu x11/cuda_x11_simd512.cu x11/cuda_x11_echo.cu \
 			  x13/cuda_m7_sha256.cu x13/cuda_mul.cu x13/cuda_mul2.cu x13/cuda_ripemd160.cu x13/cuda_tiger192.cu \
