@@ -14,7 +14,7 @@ extern cudaError_t MyStreamSynchronize(cudaStream_t stream, int situation, int t
 #include "cuda_helper.h"
 // #include "cuda_helper.h"
 
-#define MAXWELL_OR_FERMI 0
+#define MAXWELL_OR_FERMI 1
 #define USE_SHARED 1
 
  #define SPH_C32(x)    ((uint32_t)(x ## U))
@@ -26,13 +26,13 @@ extern cudaError_t MyStreamSynchronize(cudaStream_t stream, int situation, int t
 #define QC32dn(j, r)   (((uint32_t)(r) << 24) ^ SPH_T32(~((uint32_t)(j) << 24)))
 
 #define B32_0(x)    __byte_perm(x, 0, 0x4440)
-//((x) & 0xFF)
+//#define B32_0(x) ((x) & 0xFF)
 #define B32_1(x)    __byte_perm(x, 0, 0x4441)
-//(((x) >> 8) & 0xFF)
+//#define B32_1(x) (((x) >> 8) & 0xFF)
 #define B32_2(x)    __byte_perm(x, 0, 0x4442)
-//(((x) >> 16) & 0xFF)
+//#define B32_2(x) (((x) >> 16) & 0xFF)
 #define B32_3(x)    __byte_perm(x, 0, 0x4443)
-//((x) >> 24)
+//#define B32_3(x) ((x) >> 24)
 
 // a healthy mix between shared and textured access provides the highest speed on Compute 3.0 and 3.5!
 #define T0up(x) (*((uint32_t*)mixtabs + (    (x))))
@@ -214,9 +214,9 @@ void quark_groestl512_perm_Q(uint32_t *a, char *mixtabs)
 
 
 __global__
-void quark_groestl512_gpu_hash_64(uint32_t threads, uint32_t startNounce, uint32_t *g_hash, uint32_t *g_nonceVector)
+void quark_groestl512_gpu_sm20_64(uint32_t threads, uint32_t startNounce, uint32_t *g_hash, uint32_t *g_nonceVector)
 {
-#if __CUDA_ARCH__ < 300
+
 	extern __shared__ char mixtabs[];
 
 	if (threadIdx.x < 256)
@@ -283,11 +283,11 @@ void quark_groestl512_gpu_hash_64(uint32_t threads, uint32_t startNounce, uint32
 		#pragma unroll 16
 		for(int k=0;k<16;k++) outpHash[k] = state[k+16];
 	}
-#endif
+
 }
 
 __global__
-void ziftr_groestl512_gpu_hash_64(uint32_t threads, uint32_t startNounce, uint32_t *g_hash, uint8_t *d_test, uint32_t table)
+void ziftr_groestl512_gpu_sm20_64(uint32_t threads, uint32_t startNounce, uint32_t *g_hash, uint8_t *d_test, uint32_t table)
 {
 
 	extern __shared__ char mixtabs[];
@@ -360,7 +360,7 @@ void ziftr_groestl512_gpu_hash_64(uint32_t threads, uint32_t startNounce, uint32
 }
 
 }
-
+ 
 
 #define texDef(texname, texmem, texsource, texsize) \
 	unsigned int *texmem; \
@@ -389,14 +389,14 @@ void quark_groestl512_sm20_init(int thr_id, uint32_t threads)
 __host__
 void quark_groestl512_sm20_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_nonceVector, uint32_t *d_hash, int order)
 {
-	int threadsperblock = 512;
+	int threadsperblock = 256;
 
 	dim3 grid((threads + threadsperblock-1)/threadsperblock);
 	dim3 block(threadsperblock);
 
 	size_t shared_size = 8 * 256 * sizeof(uint32_t);
 
-	quark_groestl512_gpu_hash_64<<<grid, block, shared_size>>>(threads, startNounce, d_hash, d_nonceVector);
+	quark_groestl512_gpu_sm20_64<<<grid, block, shared_size>>>(threads, startNounce, d_hash, d_nonceVector);
 
 	// MyStreamSynchronize(NULL, order, thr_id);
 }
@@ -404,14 +404,14 @@ void quark_groestl512_sm20_hash_64(int thr_id, uint32_t threads, uint32_t startN
 __host__
 void ziftr_groestl512_sm20_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash, uint32_t *d_test, uint32_t table, int order)
 {
-	int threadsperblock = 512;
+	int threadsperblock = 256;
 
 	dim3 grid((threads + threadsperblock - 1) / threadsperblock);
 	dim3 block(threadsperblock);
 
 	size_t shared_size = 8 * 256 * sizeof(uint32_t);
 
-	ziftr_groestl512_gpu_hash_64 << <grid, block, shared_size >> >(threads, startNounce, d_hash, (uint8_t*)d_test,table);
+	ziftr_groestl512_gpu_sm20_64 << <grid, block, shared_size >> >(threads, startNounce, d_hash, (uint8_t*)d_test,table);
 
 	 MyStreamSynchronize(NULL, order, thr_id);
 }
@@ -426,8 +426,8 @@ void quark_doublegroestl512_sm20_hash_64(int thr_id, uint32_t threads, uint32_t 
 
 	size_t shared_size = 8 * 256 * sizeof(uint32_t);
 
-	quark_groestl512_gpu_hash_64<<<grid, block, shared_size>>>(threads, startNounce, d_hash, d_nonceVector);
-	quark_groestl512_gpu_hash_64<<<grid, block, shared_size>>>(threads, startNounce, d_hash, d_nonceVector);
+	quark_groestl512_gpu_sm20_64<<<grid, block, shared_size>>>(threads, startNounce, d_hash, d_nonceVector);
+	quark_groestl512_gpu_sm20_64<<<grid, block, shared_size>>>(threads, startNounce, d_hash, d_nonceVector);
 
 	 MyStreamSynchronize(NULL, order, thr_id);
 }

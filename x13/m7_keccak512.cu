@@ -10,7 +10,7 @@
 
 
 extern cudaError_t MyStreamSynchronize(cudaStream_t stream, int situation, int thr_id);
-
+extern int compute_version[8];
 
 #include "cuda_helper.h"
 static __constant__ uint64_t stateo[25];
@@ -910,7 +910,6 @@ __global__ __launch_bounds__(256,3) void ziftr_keccak512_gpu_hash_80(int threads
 	} //thread
 }
 
-
 __global__ __launch_bounds__(256, 3) void ziftr_keccak512_gpu_hash_80_round2(int threads, uint32_t startNounce, uint32_t *outputHash, uint32_t *test)
 {
 
@@ -947,6 +946,80 @@ __global__ __launch_bounds__(256, 3) void ziftr_keccak512_gpu_hash_80_round2(int
 		(test + thread)[0] = ((uint32_t*)arrOrder)[ustate[0].x % 24];
 	} //thread
 }
+
+__global__ __launch_bounds__(128, 2) void ziftr_keccak512_gpu_hash_80_v30(int threads, uint32_t startNounce, uint32_t *outputHash, uint32_t *test)
+{
+
+	int thread = (blockDim.x * blockIdx.x + threadIdx.x);
+	if (thread < threads)
+	{
+
+
+		uint32_t nounce = startNounce + thread; // original implementation
+		//	uint32_t nounce = cuda_swab32(nounce2);
+
+		uint64_t ustate[25];
+#pragma unroll 25;
+		for (int i = 0; i<25; i++) { ustate[i] = stateo[i]; }
+
+		uint2 addnonce;
+		LOHI(addnonce.x, addnonce.y, c_PaddedMessage80[9]);
+		addnonce.y = nounce;
+		ustate[0] ^= devectorize(addnonce);
+		ustate[1] ^= c_PaddedMessage80[10];
+		ustate[8] ^= 0x8000000000000000;
+
+		keccak_block(ustate, RC);
+
+
+
+#pragma unroll 8 
+		for (int i = 0; i<8; i++)
+			((uint64_t*)(outputHash + 16 * thread))[i] = ustate[i];
+
+		(test + thread)[0] = ((uint32_t*)arrOrder)[((uint32_t*)ustate)[0] % 24];
+
+
+	} //thread
+}
+
+__global__ __launch_bounds__(128, 2) void ziftr_keccak512_gpu_hash_80_round2_v30(int threads, uint32_t startNounce, uint32_t *outputHash, uint32_t *test)
+{
+
+	int thread = (blockDim.x * blockIdx.x + threadIdx.x);
+	if (thread < threads)
+	{
+
+
+		uint32_t nounce = startNounce + thread;
+
+		uint64_t ustate[25];
+
+#pragma unroll
+		for (int i = 9; i<25; i++) { ustate[i] = 0; }
+#pragma unroll
+		for (int i = 0; i<9; i++) { ustate[i] = c_PaddedMessage80[i]; }
+		((uint32_t*)ustate)[0] |= (0xFFFF0000 & ((outputHash + 16 * thread)[0] & 0xFFFF0000));
+
+		keccak_block(ustate, RC);
+
+		uint2 addnonce;
+		LOHI(addnonce.x, addnonce.y, c_PaddedMessage80[9]);
+		addnonce.y = nounce;
+		ustate[0] ^= devectorize(addnonce);
+		ustate[1] ^= c_PaddedMessage80[10];
+		ustate[8] ^=  0x8000000000000000;
+
+		keccak_block(ustate, RC);
+
+#pragma unroll 8 
+		for (int i = 0; i<8; i++)
+			((uint64_t*)(outputHash + 16 * thread))[i] = ustate[i];
+
+		(test + thread)[0] = ((uint32_t*)arrOrder)[((uint32_t*)ustate)[0] % 24];
+	} //thread
+}
+
 
 void m7_keccak512_cpu_init(int thr_id, int threads)
 {
@@ -1037,21 +1110,35 @@ __host__ void ziftr_keccak512_cpu_hash_80(int thr_id, int threads, uint32_t star
 	dim3 grid((threads + threadsperblock - 1) / threadsperblock);
     dim3 block(threadsperblock);
 
-    size_t shared_size = 0;
+	const int threadsperblock2 = 128;
+	dim3 grid2((threads + threadsperblock2 - 1) / threadsperblock2);
+	dim3 block2(threadsperblock2);
 
+
+    size_t shared_size = 0;
+	if (compute_version[thr_id]>30) 
     ziftr_keccak512_gpu_hash_80<<<grid, block, shared_size>>>(threads, startNounce, d_hash, d_test);
+    else 
+	ziftr_keccak512_gpu_hash_80_v30 << <grid2, block2, shared_size >> >(threads, startNounce, d_hash, d_test);
     MyStreamSynchronize(NULL, order, thr_id);
 }
 
 __host__ void ziftr_keccak512_cpu_hash_80_round2(int thr_id, int threads, uint32_t startNounce, uint32_t *d_hash, uint32_t* d_test, int order)
 {
 	const int threadsperblock = 256;
-
 	dim3 grid((threads + threadsperblock - 1) / threadsperblock);
 	dim3 block(threadsperblock);
 
-	size_t shared_size = 0;
+	const int threadsperblock2 = 128;
+	dim3 grid2((threads + threadsperblock2 - 1) / threadsperblock2);
+	dim3 block2(threadsperblock2);
 
+
+	size_t shared_size = 0;
+	if (compute_version[thr_id]>30)
 	ziftr_keccak512_gpu_hash_80_round2 << <grid, block, shared_size >> >(threads, startNounce, d_hash, d_test);
+    else
+		ziftr_keccak512_gpu_hash_80_round2_v30 << <grid2, block2, shared_size >> >(threads, startNounce, d_hash, d_test);
+ 
 	MyStreamSynchronize(NULL, order, thr_id);
 }
