@@ -537,18 +537,19 @@ __inline__ __device__ uint2 ROR2(const uint2 a, const int offset) {
 	return result;
 }
 #else
-__inline__ __device__ uint2 ROR2(const uint2 v, const int a) {
-		uint2 result;
-        int n = 64 -a; //lazy
-		if (n <= 32) {
-			result.y = ((v.y << (n)) | (v.x >> (32 - n)));
-			result.x = ((v.x << (n)) | (v.y >> (32 - n)));
-		}
-		else {
-			result.y = ((v.x << (n - 32)) | (v.y >> (64 - n)));
-			result.x = ((v.y << (n - 32)) | (v.x >> (64 - n)));
-		}
-		return result;
+__inline__ __device__ uint2 ROR2(const uint2 v, const int n) {
+	uint2 result;
+	if (n <= 32)
+	{
+		result.y = ((v.y >> (n)) | (v.x << (32 - n)));
+		result.x = ((v.x >> (n)) | (v.y << (32 - n)));
+	}
+	else 
+	{
+		result.y = ((v.x >> (n - 32)) | (v.y << (32 - n)));
+		result.x = ((v.y >> (n - 32)) | (v.x << (32 - n)));
+	}
+	return result;
 	}
 #endif
 
@@ -567,19 +568,21 @@ __inline__ __device__ uint2 ROL2(const uint2 a, const int offset) {
 return result;
 }
 #else
-__inline__ __device__ uint2 ROL2(const uint2 v, const int n) {
-		uint2 result;
-		if (n == 32) {result.x = v.y;result.y=v.x;}
-		if (n < 32) {
-			result.y = ((v.y << (n)) | (v.x >> (32 - n)));
-			result.x = ((v.x << (n)) | (v.y >> (32 - n)));
-		}
-		else {
-			result.y = ((v.x << (n - 32)) | (v.y >> (64 - n)));
-			result.x = ((v.y << (n - 32)) | (v.x >> (64 - n)));
-		}
-		return result;
+__inline__ __device__ uint2 ROL2(const uint2 v, const int n)
+{
+	uint2 result;
+	if (n <= 32)
+	{
+		result.y = ((v.y << (n)) | (v.x >> (32 - n)));
+		result.x = ((v.x << (n)) | (v.y >> (32 - n)));
 	}
+	else
+	{
+		result.y = ((v.x << (n - 32)) | (v.y >> (64 - n)));
+		result.x = ((v.y << (n - 32)) | (v.x >> (64 - n)));
+	}
+	return result;
+}
 #endif
 
 static __forceinline__ __device__ uint64_t devectorize(uint2 v) { return MAKE_ULONGLONG(v.x, v.y); }
