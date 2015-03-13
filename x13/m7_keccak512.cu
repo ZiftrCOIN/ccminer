@@ -962,10 +962,9 @@ __global__ __launch_bounds__(128, 2) void ziftr_keccak512_gpu_hash_80_v30(int th
 #pragma unroll 25;
 		for (int i = 0; i<25; i++) { ustate[i] = stateo[i]; }
 
-		uint2 addnonce;
-		LOHI(addnonce.x, addnonce.y, c_PaddedMessage80[9]);
-		addnonce.y = nounce;
-		ustate[0] ^= devectorize(addnonce);
+		uint64_t addnonce;
+		addnonce = REPLACE_HIWORD(c_PaddedMessage80[9], nounce);
+		ustate[0] ^= addnonce;
 		ustate[1] ^= c_PaddedMessage80[10];
 		ustate[8] ^= 0x8000000000000000;
 
@@ -1003,10 +1002,9 @@ __global__ __launch_bounds__(128, 2) void ziftr_keccak512_gpu_hash_80_round2_v30
 
 		keccak_block(ustate, RC);
 
-		uint2 addnonce;
-		LOHI(addnonce.x, addnonce.y, c_PaddedMessage80[9]);
-		addnonce.y = nounce;
-		ustate[0] ^= devectorize(addnonce);
+		uint64_t addnonce;
+		addnonce = REPLACE_HIWORD(c_PaddedMessage80[9], nounce);
+		ustate[0] ^= addnonce;
 		ustate[1] ^= c_PaddedMessage80[10];
 		ustate[8] ^=  0x8000000000000000;
 
