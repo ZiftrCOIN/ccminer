@@ -1,0 +1,99 @@
+
+
+Build Instructions (Mac OSX)
+
+
+
+1. Install CUDA development tools (v6.5).
+
+	Make sure to use the link for cuda with gt9xx support:
+	https://developer.nvidia.com/cuda-downloads-geforce-gtx9xx
+	See guide at: http://developer.download.nvidia.com/compute/cuda/6_5/rel/docs/CUDA_Getting_Started_Mac.pdf
+
+	add symlink for lib64 folder
+	sudo ln -s /usr/local/cuda/lib /usr/local/cuda/lib64
+
+
+
+2. Setup Path variables for CUDA.
+
+	export CUDA_HOME=/usr/local/cuda
+	export LD_LIBRARY_PATH=${CUDA_HOME}/lib64
+	export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+	export DYLD_LIBRARY_PATH=/usr/local/cuda/lib:$DYLD_LIBRARY_PATH
+	PATH=${CUDA_HOME}/bin:${PATH}	
+	export PATH
+ 
+
+3. Make sure mpir is installed and setup correctly.
+	Download from: http://mpir.org
+	tar -xvf mpir-2.7.0-alpha12.tar.bz2
+	cd mpir-2.7.0
+	./configure
+	make
+	make install
+	
+
+
+
+4. Make sure libcurl is installed and setup correctly.
+
+	Taken from: http://dahu.co.uk/blog/?p=77
+
+follow these steps to get and build libcurl:
+
+Go to http://curl.haxx.se/download.html and download the latest ‘source archive’, and get the ‘tar’ version. At the time of writing, this is curl-7.24.0.tar
+When its downloaded, move the tar file from your downloads folder to a temporary folder of your choice (e.g. ~/Desktop/libcurl)
+open a temporary window and change directory to the temporary folder
+expand the tar file:
+ tar -xvf curl-7.24.0.tar
+the expansion will have created a sub-directory. CD into curl-7.24.0 and then issue the following commands:
+./configure
+make
+make test
+sudo make install
+‘configure’ will set up the build environment for the platform concerned (OSX in this case), ‘make’ will do the actual build, ‘make test’ will run the unit tests to ensure everything is working ok (note that these tests might take five minutes to complete) and ‘sudo make install’ will move the various components into sensible places for the environment. Note also that because we will be moving files to some system locations, you should run the install as root using sudo – give it your administration password.
+That’s it – the install all done. the make install will have put our header files in:
+
+/Usr/local/include/curl
+and the libraries in
+
+/Usr/local/lib/libcurl.a
+/Usr/local/lib/libcurl.dylib
+
+
+
+
+
+5. Make build files executable
+
+	chmod +x autogen.sh
+	chmod +x configure
+	chmod +x install-sh
+
+
+
+
+6. Make sure Makefile.am supports subdirectories.
+	This line should be in the Makefile.am file after the other declarations:
+		AUTOMAKE_OPTIONS = subdir-objects
+
+
+
+
+7. Add symlink to README pointing to our readme file.
+	ln -s README.txt README
+
+8. Fix linking against standard libraries.
+	There is an issue with newer version of OSX building against libc instead of libstd.
+	Make sure -stdlib=libstdc++ is added to CXXFLAGS.
+	eg add this to configure.sh
+	"CXXFLAGS= -O3 -stdlib=libstdc++"
+
+
+
+8. Build It!
+	make clean
+	./autogen.sh
+	sh configure.sh
+	make
