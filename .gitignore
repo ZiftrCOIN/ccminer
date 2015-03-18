@@ -7,3 +7,5 @@
 .deps/**
 **/.deps/
 *.cache/
+**/.dirstamp
+*.in
