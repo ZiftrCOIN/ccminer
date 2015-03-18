@@ -89,6 +89,7 @@ inline void zr5hash(void *state, const void *input)
 	sph_keccak512_close(&ctx_keccak, hash);
 	uint32_t nOrder = hash[0] % (sizeof(arrOrder)/sizeof((arrOrder)[0]));
 	int nSize = 64;
+
 	
 	for (unsigned int i = 0; i < 4; i++)
 	{
@@ -125,6 +126,7 @@ inline void zr5hash(void *state, const void *input)
 			break;
 		}
 	}
+
     memcpy(state, hash, 64);
 }
 
@@ -173,7 +175,7 @@ extern "C" int scanhash_zr5(int thr_id, uint32_t *pdata,
 		endiandata[k] = pdata[k];}
 
 
- m7_keccak512_setBlock_80((void*)endiandata);
+    ziftr_keccak512_setBlock_80((void*)endiandata);
 	quark_check_cpu_setTarget(ptarget);
 
 
@@ -278,7 +280,7 @@ extern "C" int scanhash_zr5(int thr_id, uint32_t *pdata,
 				pdata[0] = endiandata[0]; // need to export both nonce and pok value
 				*hashes_done = foundNonce - first_nonce + 1;
 				return 1;
-             }
+			} else { printf("problem\n"); }
 		}
 
 		if (((uint64_t)pdata[19] + (uint64_t)throughput) > (uint64_t)UINT32_MAX) {
@@ -288,7 +290,6 @@ extern "C" int scanhash_zr5(int thr_id, uint32_t *pdata,
         }
 
 	} while (pdata[19] < max_nonce && !work_restart[thr_id].restart);
-//	pdata[0] = pdata[0] & (~0xFFFF0000); // reset pok
 	*hashes_done = pdata[19] - first_nonce + 1;
 	return 0;
 }

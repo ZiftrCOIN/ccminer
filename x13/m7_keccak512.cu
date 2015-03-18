@@ -904,9 +904,8 @@ __global__ __launch_bounds__(256,3) void ziftr_keccak512_gpu_hash_80(int threads
 		for (int i = 0; i<8; i++) 
 			 ((uint64_t*)(outputHash+16*thread))[i] = devectorize(ustate[i]);
 		
-		(test+thread)[0] = ((uint32_t*)arrOrder)[ustate[0].x % 24];
+		(test + thread)[0] = ((uint32_t*)arrOrder)[ustate[0].x % 24];
 		
-
 	} //thread
 }
 
@@ -926,7 +925,9 @@ __global__ __launch_bounds__(256, 3) void ziftr_keccak512_gpu_hash_80_round2(int
 		for (int i = 9; i<25; i++) { ustate[i] = make_uint2(0,0); }
         #pragma unroll
 		for (int i = 0; i<9; i++) {  ustate[i] = vectorize(c_PaddedMessage80[i]); }
+		
 		ustate[0].x |= (0xFFFF0000 & ((outputHash + 16 * thread)[0] & 0xFFFF0000));
+
 		
 		keccak_blockv4(ustate, RC);
 
@@ -944,6 +945,7 @@ __global__ __launch_bounds__(256, 3) void ziftr_keccak512_gpu_hash_80_round2(int
 			((uint64_t*)(outputHash + 16 * thread))[i] = devectorize(ustate[i]);
 
 		(test + thread)[0] = ((uint32_t*)arrOrder)[ustate[0].x % 24];
+		
 	} //thread
 }
 
@@ -1037,9 +1039,7 @@ __host__ void m7_keccak512_setBlock_120(void *pdata)
 	uint64_t* alt_data = (uint64_t*) pdata;
          uint64_t state[25];
 		 for(int i=0;i<25;i++) {state[i]=0;}
-           alt_data[0] &= (~0xFFFF0000);    //// attention modif for ziftrcoin
-
-		for (int i=0;i<9;i++) {state[i]  ^= alt_data[i];}
+    	for (int i=0;i<9;i++) {state[i]  ^= alt_data[i];}
 		
 		keccak_block_host(state,cpu_RC);
 
@@ -1071,6 +1071,7 @@ __host__ void m7_keccak512_setBlock_80(void *pdata)
 	memset(PaddedMessage+81, 0, 47); 
 	cudaMemcpyToSymbol(c_PaddedMessage80, PaddedMessage, 16*sizeof(uint64_t), 0, cudaMemcpyHostToDevice);
 	uint64_t* alt_data = (uint64_t*) pdata;
+
          uint64_t state[25];
 		 for(int i=0;i<25;i++) {state[i]=0;}
 		for (int i=0;i<9;i++) {state[i]  ^= alt_data[i];}
@@ -1085,6 +1086,7 @@ __host__ void ziftr_keccak512_setBlock_80(void *pdata)
 
 	unsigned char PaddedMessage[128];
 	uint8_t ending = 0x01;
+	((uint32_t*)pdata)[0] &= (~0xffff0000); // duh !!
 	memcpy(PaddedMessage, pdata, 80);
 	memset(PaddedMessage + 80, ending, 1);
 	memset(PaddedMessage + 81, 0, 47);
@@ -1092,7 +1094,10 @@ __host__ void ziftr_keccak512_setBlock_80(void *pdata)
 	uint64_t* alt_data = (uint64_t*)pdata;
 	uint64_t state[25];
 	for (int i = 0; i<25; i++) { state[i] = 0; }
-	state[0] = alt_data[0] & (~0xffff0000);
+
+	state[0] = alt_data[0];
+   ((uint32_t*)state)[0] &= (~0xffff0000);
+
 	for (int i = 1; i<9; i++) { state[i] = alt_data[i]; }
 	keccak_block_host(state, cpu_RC);
 

@@ -879,11 +879,15 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 		uint32_t ntime, nonce;
 		uint16_t nvote;
 		char *ntimestr, *noncestr, *xnonce2str, *nvotestr;
+		if (opt_algo == ALGO_ZR5) {
+			be32enc(&ntime, work->data[17]);
+			be32enc(&nonce, work->data[19]);
 
+        } else {
 		le32enc(&ntime, work->data[17]);
 		le32enc(&nonce, work->data[19]);
 		be16enc(&nvote, *((uint16_t*)&work->data[20]));
-
+        }
 		ntimestr = bin2hex((const unsigned char *)(&ntime), 4);
 		noncestr = bin2hex((const unsigned char *)(&nonce), 4);
 		xnonce2str = bin2hex(work->xnonce2, work->xnonce2_len);
@@ -1302,13 +1306,24 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 
 	/* Assemble block header */
 	memset(work->data, 0, 128);
+
+	if (opt_algo==ALGO_ZR5) {
+		work->data[0] = be32dec(sctx->job.version);
+		for (i = 0; i < 8; i++)
+			work->data[1 + i] = be32dec((uint32_t *)sctx->job.prevhash + i);
+		for (i = 0; i < 8; i++)
+			work->data[9 + i] = le32dec((uint32_t *)merkle_root + i);
+		work->data[17] = be32dec(sctx->job.ntime);
+		work->data[18] = be32dec(sctx->job.nbits);
+	} else {
+
 	work->data[0] = le32dec(sctx->job.version);
 	for (i = 0; i < 8; i++)
 		work->data[1 + i] = le32dec((uint32_t *)sctx->job.prevhash + i);
 	for (i = 0; i < 8; i++)
 		work->data[9 + i] = be32dec((uint32_t *)merkle_root + i);
 	work->data[17] = le32dec(sctx->job.ntime);
-	work->data[18] = le32dec(sctx->job.nbits);
+	work->data[18] = le32dec(sctx->job.nbits);}
 	if (opt_algo == ALGO_MJOLLNIR)
 	{
 		for (i = 0; i < 20; i++)
@@ -1488,7 +1503,7 @@ static void *miner_thread(void *userdata)
 			} else
 				work.data[29]++; // todo
 		} else {
-		if (memcmp(work.data, g_work.data, 76)) {
+		if (memcmp(work.data+1, g_work.data+1, 72)) {
 			memcpy(&work, &g_work, sizeof(struct work));
 //			work_free(&work);
 //			work_copy(&work, &g_work);
@@ -1519,7 +1534,7 @@ static void *miner_thread(void *userdata)
 				max64 = 0x3ffffLL;
 				break;
              case ALGO_ZR5:
-                max64 = 0x200000;
+				 max64 = 0x1fffffLL;
                 break;
 			default: 
 				max64 = 0xfffffLL;
@@ -1696,7 +1711,7 @@ static void *miner_thread(void *userdata)
 	    break;
 	
 //// eliminate the duplicate
-		if (rc == 1 && opt_algo == ALGO_ZR5) {
+		if (rc == 1 && opt_algo == ALGO_ZR5 && !have_stratum) {
 			if (unlikely(!get_work(mythr, &g_work))) {
 				pthread_mutex_lock(&stats_lock);
 				applog(LOG_ERR, "work retrieval failed, exiting "
