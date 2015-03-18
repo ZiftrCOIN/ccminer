@@ -1503,13 +1503,13 @@ static void *miner_thread(void *userdata)
 			} else
 				work.data[29]++; // todo
 		} else {
-		if (memcmp(work.data+1, g_work.data+1, 72)) {
+
+			if ((opt_algo == ALGO_ZR5) ? memcmp(work.data + 1, g_work.data + 1, 72) : memcmp(work.data, g_work.data, 76)) {
 			memcpy(&work, &g_work, sizeof(struct work));
-//			work_free(&work);
-//			work_copy(&work, &g_work);
 			work.data[19] = 0xffffffffU / opt_n_threads * thr_id;
 		} else
 			work.data[19]++;
+
 		}
 		pthread_mutex_unlock(&g_work_lock);
 		work_restart[thr_id].restart = 0;
