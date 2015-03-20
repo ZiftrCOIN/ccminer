@@ -9,3 +9,9 @@
 *.cache/
 **/.dirstamp
 *.in
+*.log
+MakeFile
+ccminer
+.cproject
+.project
+**/*.in
