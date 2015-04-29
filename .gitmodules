@@ -1,0 +1,3 @@
+[submodule "deviceQuery"]
+	path = dQ
+	url = https://github.com/ZiftrCOIN/deviceQuery.git
